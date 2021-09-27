@@ -62,7 +62,7 @@ const setUpExpress = () => {
     return next();
   });
 
-  app.use(express.static(`${ __dirname }/static`));
+  app.use(express.static(`${__dirname  }/www`));
 
   routes.forEach(({ route, get, post }) => {
     const method = get ? "get" : "post";

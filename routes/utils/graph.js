@@ -265,7 +265,7 @@ const walkGraph = (startNode, durations, startTime, NPMRDS = null) => {
 
     const node = GRAPH.getNode(+nodeId);
 
-    if (node) {
+    if (node && node.links) {
       node.links
         .filter(({ fromId }) => +fromId === +nodeId)
         .forEach(({ toId, data }) => {
