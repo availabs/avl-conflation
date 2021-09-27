@@ -238,14 +238,14 @@ const getNodesFromCoords = async coords => {
 }
 
 const getTravelTime = (tmc, epoch, NPMRDS, miles, n) => {
-  if (NPMRDS.has(tmc) && NPMRDS.get(tmc).has(+epoch) && TMC_META.has(tmc)) {
+  if (NPMRDS && NPMRDS.has(tmc) && NPMRDS.get(tmc).has(+epoch) && TMC_META.has(tmc)) {
     const tmcMiles = TMC_META.get(tmc);
     return NPMRDS.get(tmc).get(+epoch) * (miles / tmcMiles);
   }
   return miles / AVG_SPEED_LIMIT_BY_NETWORK_LEVEL.get(+n);
 }
 
-const walkGraph = (startNode, durations, NPMRDS, startTime) => {
+const walkGraph = (startNode, durations, startTime, NPMRDS = null) => {
   const requests = [{
     nodeId: startNode,
     travelTime: 0,
