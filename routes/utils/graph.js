@@ -71,8 +71,8 @@ const streamWays = async client => {
         if (nodes[i - 1] !== nodes[i]) {
           const n1 = GRAPH.getNode(+nodes[i - 1]),
             n2 = GRAPH.getNode(+nodes[i]),
-            dist = turfDistance(n1.data.coords, n2.data.coords);
-          GRAPH.addLink(+nodes[i - 1], +nodes[i], { wayId: id, tmc, n, dist });
+            miles = turfDistance(n1.data.coords, n2.data.coords, { units: "miles" });
+          GRAPH.addLink(+nodes[i - 1], +nodes[i], { wayId: id, tmc, miles, n });
         }
       }
       callback(null);
@@ -273,9 +273,9 @@ const walkGraph = (startNode, durations, startTime, NPMRDS = null) => {
 
           const id = +toId;
 
-          const { tmc, n } = data;
+          const { tmc, miles, n } = data;
 
-          const miles = turfDistance(node.data.coords, toNode.data.coords, { units: "miles" });
+          // const miles = turfDistance(node.data.coords, toNode.data.coords, { units: "miles" });
 
           const tt = travelTime + getTravelTime(tmc, epoch, NPMRDS, miles, n);
 
@@ -317,7 +317,7 @@ console.log("NODES:", nodes)
   const pathFinder = aStar(GRAPH, {
     oriented: true,
     distance: (from, to, link) => {
-      return link.data.dist;
+      return link.data.miles;
     }
   });
 
