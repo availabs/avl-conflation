@@ -14,9 +14,10 @@ const { npmrdsPool, npmrdsClient } = require("./db_service")
 
 const CONFLATION_VERSION = "v0_6_0"
 
-let NODES = [];
-let WAYS = [];
 let GRAPH = createGraph();
+
+const WAY_MAP = new Map();
+
 let AVG_SPEED_LIMIT_BY_NETWORK_LEVEL = new Map();
 let TMC_META = new Map();
 
@@ -65,14 +66,18 @@ const streamWays = async client => {
 
   const graphWriter = new Writable({
     write(chunk, enc, callback) {
-      const [id, nodesJSON, tmc, n] = chunk.toString().split("|");
+      const [id, nodesJSON, tmc, n, osm_fwd] = chunk.toString().split("|");
+
       const nodes = JSON.parse(nodesJSON);
+
+      WAY_MAP.set(id, { id, nodes, tmc, n, osm_fwd });
+
       for (let i = 1; i < nodes.length; ++i) {
         if (nodes[i - 1] !== nodes[i]) {
           const n1 = GRAPH.getNode(+nodes[i - 1]),
             n2 = GRAPH.getNode(+nodes[i]),
             miles = turfDistance(n1.data.coords, n2.data.coords, { units: "miles" });
-          GRAPH.addLink(+nodes[i - 1], +nodes[i], { wayId: id, tmc, miles, n });
+          GRAPH.addLink(+nodes[i - 1], +nodes[i], { wayId: id, tmc, miles, n, osm_fwd });
         }
       }
       callback(null);
@@ -84,7 +89,7 @@ const streamWays = async client => {
       client.query(
         copyTo(`
           COPY (
-            SELECT a.id, array_to_json(a.node_ids), b.tmc, b.n
+            SELECT a.id, array_to_json(a.node_ids), b.tmc, b.n, COALESCE(osm_fwd, 1)
             FROM conflation.conflation_map_2020_ways_${ CONFLATION_VERSION } AS a
               JOIN conflation.conflation_map_2020_${ CONFLATION_VERSION } AS b
                 USING(id)
@@ -352,6 +357,9 @@ module.exports = {
   getNpmrds,
   walkGraph,
   getRoute,
+
+  getGraph: () => GRAPH,
+  getWayMap: () => WAY_MAP,
 
   loadConflationData: async () => {
 console.log(`LOADING GRAPH DATA FOR PROCESS: ${ process.pid }`);
